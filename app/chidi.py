@@ -2,7 +2,6 @@
 import os,sys
 from sklearn.ensemble import RandomForestClassifier as RFC
 import csv
-import json
 import numpy as np
 import pickle
 

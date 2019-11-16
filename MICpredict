@@ -5,9 +5,10 @@
 #description determine the minimum inhibitory concentration from the genotypic
 #data using a machine learning algorithim
 
-import os,sys,argparse,json,csv
+import os,sys,argparse,csv
 import app.kmer as kmer
 from app.chidi import predict
+import pickle
 
 #setup argparser to display help if no arguments
 class MyParser(argparse.ArgumentParser):
@@ -32,7 +33,7 @@ args = parser.parse_args()
 salomic_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 if args.model == 'salmonella':
     model_path = os.path.join(salomic_path,'SaloMic/app/rf_model.sav')
-    vocab_path = os.path.join(salomic_path,'SaloMic/db/kmer_dictionary.json')
+    vocab_path = os.path.join(salomic_path,'SaloMic/db/kmer_dictionary.pkl')
 
 kmer_files = []
 if args.f and args.r:
@@ -52,7 +53,7 @@ else:
 
 results = []
 with open(vocab_path,'r') as infile:
-    v = json.load(infile)
+    v = pickle.load(infile)
     id,result = predict(kmer_files,v,model_path)
     row = [*id,*result]
     results.append(row)
