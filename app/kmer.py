@@ -57,7 +57,7 @@ def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
 
     #run blast
     print('Running blastn...')
-    runblast = f"blastn -query {database_path} -db {temp_name} -out {temp_name}.blast.csv -outfmt \"10 qseqid sseqid evalue pident\" -max_target_seqs 10000000 -evalue 100"
+    runblast = f"blastn -num_threads {cpus} -query {database_path} -db {temp_name} -out {temp_name}.blast.csv -outfmt \"10 qseqid sseqid evalue pident\" -max_target_seqs 10000000 -evalue 100"
     runblast_cmd = shlex.split(runblast)
     Popen(runblast_cmd,stdout=DEVNULL,env={'PATH':binaries_path}).wait()
 
