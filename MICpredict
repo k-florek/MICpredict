@@ -45,7 +45,7 @@ elif args.reads:
         while line:
             read1 = line
             read2 = filepaths.readline()
-            kmer_files.append(kmer.local_mapping(args.t,args.f,args.r,args.db))
+            kmer_files.append(kmer.local_mapping(args.t,read1,read2,args.db))
             line = filepaths.readline()
 else:
     print("Missing read file inputs...")
