@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+#Author Kelsey Florek
+#email kelsey.florek@slh.wisc.edu
+#description determine the minimum inhibitory concentration from the genotypic
+#data using a machine learning algorithim
+
+import os,sys,argparse,json,csv
+import app.kmer as kmer
+from app.chidi import predict
+
+#setup argparser to display help if no arguments
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
+
+#determine command line arguments and get path
+parser = MyParser(description='SaloMIC is a pipeline to estimate the Minimum Inhibitory Concentration (MIC) of an antibiotic from the nucleotide information in Salmonella (Sal).')
+
+parser.add_argument('-f',help='path to the forward reads')
+parser.add_argument('-r',help='path to the reverse reads')
+parser.add_argument('--reads',help='path to file of paths to read files, sorted by name')
+parser.add_argument('--db',type=str,help='AR database to use',default='ncbi_ar')
+parser.add_argument('--model',type=str,help='model to use, default is salmonella',default='salmonella')
+parser.add_argument('-t',type=int,help='number of threads, defualt is 4',default=4)
+
+args = parser.parse_args()
+
+#establish global paths
+salomic_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
+if args.model == 'salmonella':
+    model_path = os.path.join(salomic_path,'SaloMic/app/rf_model.sav')
+    vocab_path = os.path.join(salomic_path,'SaloMic/db/kmer_dictionary.json')
+
+kmer_files = []
+if args.f and args.r:
+    kmer_files.append(kmer.local_mapping(args.t,args.f,args.r,args.db))
+
+elif args.reads:
+    with open(args.reads,'r') as filepaths:
+        line = filepaths.readline()
+        while line:
+            read1 = line
+            read2 = filepaths.readline()
+            kmer_files.append(kmer.local_mapping(args.t,args.f,args.r,args.db))
+            line = filepaths.readline()
+else:
+    print("Missing read file inputs...")
+    sys.exit(1)
+
+results = []
+with open(vocab_path,'r') as infile:
+    v = json.load(infile)
+    id,result = predict(kmer_files,v,model_path)
+    row = [*id,*result]
+    results.append(row)
+with open('MIC_results.csv','w') as csvout:
+    cwriter = csv.writer(csvout,delimiter=',')
+    for row in results:
+        cwriter.writerow(row)
