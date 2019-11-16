@@ -23,5 +23,5 @@ for file in pathlist:
                     vocab[seq] = c
                     c += 1
 
-with open("kmer_dictionary.pkl",'w') as outfile:
+with open("kmer_dictionary.pkl",'wb') as outfile:
     pickle.dump(vocab,outfile)

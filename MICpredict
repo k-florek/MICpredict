@@ -32,8 +32,8 @@ args = parser.parse_args()
 #establish global paths
 salomic_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 if args.model == 'salmonella':
-    model_path = os.path.join(salomic_path,'SaloMic/app/rf_model.sav')
-    vocab_path = os.path.join(salomic_path,'SaloMic/db/kmer_dictionary.pkl')
+    model_path = os.path.join(salomic_path,'MICpredict/app/rf_model.sav')
+    vocab_path = os.path.join(salomic_path,'MICpredict/db/kmer_dictionary.pkl')
 
 kmer_files = []
 if args.f and args.r:
@@ -52,7 +52,7 @@ else:
     sys.exit(1)
 
 results = []
-with open(vocab_path,'r') as infile:
+with open(vocab_path,'rb') as infile:
     v = pickle.load(infile)
     id,result = predict(kmer_files,v,model_path)
     row = [*id,*result]
