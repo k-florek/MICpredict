@@ -5,6 +5,7 @@
 #generate kmers from a list of paths for each read in order
 
 import os,sys,argparse
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import app.kmer as kmer
 
 #setup argparser to display help if no arguments

@@ -10,8 +10,8 @@ import csv
 from glob import glob
 
 #establish global paths
-salomic_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
-binaries_path = os.path.join(salomic_path,'binaries/linux/')
+micpredict_path= os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
+binaries_path = os.path.join(micpredict_path,'binaries/linux/')
 
 #function to map reads to ncbi resistance database
 def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
@@ -19,7 +19,7 @@ def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
     read1 = os.path.abspath(fwd)
     read2 = os.path.abspath(rev)
     seqid = os.path.basename(read1).split('_')[0]
-    database_path = os.path.join(*[salomic_path,'db',database])
+    database_path = os.path.join(*[micpredict_path,'db',database])
     fasta_seq_pos = {}
     print(f"Processing kmers for {seqid}.")
 
@@ -81,7 +81,7 @@ def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
     count_kmers = f"jellyfish count -m 21 -s 100M -t {cpus} -C {temp_name}.matches.fasta -o {temp_name}"
     count_kmers_cmd = shlex.split(count_kmers)
     Popen(count_kmers_cmd,stdout=DEVNULL,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
-    dump_kmers = f"jellyfish dump {temp_name}_0"
+    dump_kmers = f"jellyfish dump -L 2 {temp_name}_0"
     dump_kmers_cmd = shlex.split(dump_kmers)
     with open(f"{seqid}.kmers.fa",'w') as outkmers:
         Popen(dump_kmers_cmd,stdout=outkmers,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()

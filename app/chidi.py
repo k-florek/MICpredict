@@ -33,13 +33,13 @@ def trainModel(kmer_paths,vocab,mic_values):
     for id in train_ids:
         for row in mic_values:
             if row[1] in id:
-                train_labels[label_row] = row[3:]
+                train_labels[label_row] = row
                 break
         label_row += 1
 
     #train the model
     print('Training the random forest model.')
-    clf = RFC(n_estimators=10,random_state=22,n_jobs=-1,verbose=1)
+    clf = RFC(n_estimators=10,random_state=22,n_jobs=-1)
     clf.fit(train_array,train_labels)
 
     #save the model
@@ -65,8 +65,8 @@ def predict(kmer_paths,vocab,model_path):
                 k_id = vocab[seq]
                 predict_array[row,k_id] = num_ks
                 line = inkmer.readline()
-
         row += 1
+
     with open(model_path,'rb') as model_file:
         clf = pickle.load(model_file)
     result = clf.predict(predict_array)

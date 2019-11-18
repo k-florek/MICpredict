@@ -6,7 +6,6 @@ import pickle
 file_list = sys.argv[1]
 
 vocab = {}
-+
 
 c = 0
 pathlist = []

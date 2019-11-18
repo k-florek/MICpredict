@@ -18,22 +18,26 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #determine command line arguments and get path
-parser = MyParser(description='SaloMIC is a pipeline to estimate the Minimum Inhibitory Concentration (MIC) of an antibiotic from the nucleotide information in Salmonella (Sal).')
+parser = MyParser(description='MICpredict is a pipeline to estimate the Minimum Inhibitory Concentration (MIC) of an antibiotic from the nucleotide information in Salmonella (Sal).')
 
 parser.add_argument('-f',help='path to the forward reads')
 parser.add_argument('-r',help='path to the reverse reads')
 parser.add_argument('--reads',help='path to file of paths to read files, sorted by name')
 parser.add_argument('--db',type=str,help='AR database to use',default='ncbi_ar')
-parser.add_argument('--model',type=str,help='model to use, default is salmonella',default='salmonella')
+parser.add_argument('--model',type=str,help='model to use, default is salmonella',default='hf-salmonella')
 parser.add_argument('-t',type=int,help='number of threads, defualt is 4',default=4)
 
 args = parser.parse_args()
 
 #establish global paths
-salomic_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
+micpredict_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 if args.model == 'salmonella':
-    model_path = os.path.join(salomic_path,'MICpredict/app/rf_model.sav')
-    vocab_path = os.path.join(salomic_path,'MICpredict/db/kmer_dictionary.pkl')
+    model_path = os.path.join(micpredict_path,'MICpredict/app/rf_model.sav')
+    vocab_path = os.path.join(micpredict_path,'MICpredict/db/kmer_dictionary.pkl')
+
+if args.model == 'hf-salmonella':
+    model_path = os.path.join(micpredict_path,'MICpredict/app/hf_rf_model.sav')
+    vocab_path = os.path.join(micpredict_path,'MICpredict/db/hf_kmer_dictionary.pkl')
 
 kmer_files = []
 if args.f and args.r:
@@ -49,14 +53,18 @@ elif args.reads:
             line = filepaths.readline()
 else:
     print("Missing read file inputs...")
+    parser.print_help()
     sys.exit(1)
 
 results = []
 with open(vocab_path,'rb') as infile:
     v = pickle.load(infile)
-    id,result = predict(kmer_files,v,model_path)
-    row = [*id,*result]
-    results.append(row)
+    ids,result = predict(kmer_files,v,model_path)
+    c=0
+    for id in ids:
+        row = [id,*result[c]]
+        results.append(row)
+        c+=1
 with open('MIC_results.csv','w') as csvout:
     cwriter = csv.writer(csvout,delimiter=',')
     for row in results:
