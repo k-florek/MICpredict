@@ -14,7 +14,7 @@ micpredict_path= os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpat
 binaries_path = os.path.join(micpredict_path,'binaries/linux/')
 
 #function to map reads to ncbi resistance database
-def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
+def local_mapping(cpus,fwd,rev,kmer='21',database='ncbi_ar'):
     #establish absoulte paths to everything we need
     read1 = os.path.abspath(fwd)
     read2 = os.path.abspath(rev)
@@ -24,12 +24,12 @@ def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
     print(f"Processing kmers for {seqid}.")
 
     #generate a name for the temp files
-    temp_name = str(random.randint(1000,10000000))
+    temp_name = seqid+str(random.randint(1000,10000000))
 
     #decompress reads and convert to fasta
     print('Running decompression...')
-    decompress_read1 = f"zcat {read1}"
-    decompress_read2 = f"zcat {read2}"
+    decompress_read1 = f"pigz -dc -p {cpus} {read1}"
+    decompress_read2 = f"pigz -dc -p {cpus} {read2}"
     decompress_read1_cmd = shlex.split(decompress_read1)
     decompress_read2_cmd = shlex.split(decompress_read2)
 
@@ -78,7 +78,7 @@ def local_mapping(cpus,fwd,rev,database='ncbi_ar'):
 
     #generate kmers
     print('Generating Kmers...')
-    count_kmers = f"jellyfish count -m 21 -s 100M -t {cpus} -C {temp_name}.matches.fasta -o {temp_name}"
+    count_kmers = f"jellyfish count -m {kmer} -s 100M -t {cpus} -C {temp_name}.matches.fasta -o {temp_name}"
     count_kmers_cmd = shlex.split(count_kmers)
     Popen(count_kmers_cmd,stdout=DEVNULL,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
     dump_kmers = f"jellyfish dump -L 2 {temp_name}_0"
