@@ -24,7 +24,7 @@ parser.add_argument('-f',help='path to the forward reads')
 parser.add_argument('-r',help='path to the reverse reads')
 parser.add_argument('--reads',help='path to file of paths to read files, sorted by name')
 parser.add_argument('--db',type=str,help='AR database to use',default='ncbi_ar')
-parser.add_argument('--model',type=str,help='model to use, default is salmonella',default='hf-salmonella')
+parser.add_argument('--model',type=str,help='model to use, default is salmonella',default='salmonella')
 parser.add_argument('-t',type=int,help='number of threads, defualt is 4',default=4)
 
 args = parser.parse_args()
@@ -40,8 +40,9 @@ if args.model == 'hf-salmonella':
     vocab_path = os.path.join(micpredict_path,'MICpredict/db/hf_kmer_dictionary.pkl')
 
 kmer_files = []
+kmer_size = '21'
 if args.f and args.r:
-    kmer_files.append(kmer.local_mapping(args.t,args.f,args.r,args.db))
+    kmer_files.append(kmer.local_mapping(args.t,args.f,args.r,args.k,kmer_size,args.db))
 
 elif args.reads:
     with open(args.reads,'r') as filepaths:
