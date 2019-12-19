@@ -81,7 +81,7 @@ def local_mapping(cpus,fwd,rev,kmer='21',database='ncbi_ar'):
     count_kmers = f"jellyfish count -m {kmer} -s 100M -t {cpus} -C {temp_name}.matches.fasta -o {temp_name}"
     count_kmers_cmd = shlex.split(count_kmers)
     Popen(count_kmers_cmd,stdout=DEVNULL,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
-    dump_kmers = f"jellyfish dump -L 2 {temp_name}_0"
+    dump_kmers = f"jellyfish dump {temp_name}_0"
     dump_kmers_cmd = shlex.split(dump_kmers)
     with open(f"{seqid}.kmers.fa",'w') as outkmers:
         Popen(dump_kmers_cmd,stdout=outkmers,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
