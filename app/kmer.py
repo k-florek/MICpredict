@@ -14,14 +14,16 @@ micpredict_path= os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpat
 binaries_path = os.path.join(micpredict_path,'binaries/linux/')
 
 #function to map reads to ncbi resistance database
-def local_mapping(cpus,fwd,rev,kmer='7',database='ncbi_ar'):
+def local_mapping(cpus,read1,read2,kmer='7',database='ncbi_ar',working_dir='.'):
+    #goto working_dir
+    work_dir_path = os.path.abspath(working_dir)
+    os.chdir(work_dir_path)
+
     #establish absoulte paths to everything we need
-    read1 = os.path.abspath(fwd)
-    read2 = os.path.abspath(rev)
-    seqid = os.path.basename(read1).split('_')[0]
+    seqid = os.path.basename(read1).split('_R1')[0]
     database_path = os.path.join(*[micpredict_path,'db',database])
     fasta_seq_pos = {}
-    print(f"Processing kmers for {seqid}.")
+    print(f"Processing kmers for {seqid}")
 
     #generate a name for the temp files
     temp_name = seqid+str(random.randint(1000,10000000))
@@ -51,13 +53,15 @@ def local_mapping(cpus,fwd,rev,kmer='7',database='ncbi_ar'):
 
     #build blast database
     print('Building database...')
-    buildblastdb = f"makeblastdb -in {temp_name}.fasta -dbtype nucl -out {temp_name}"
+    makeblastdb_path = os.path.join(binaries_path,'makeblastdb')
+    buildblastdb = f"{makeblastdb_path} -in {temp_name}.fasta -dbtype nucl -out {temp_name}"
     buildblastdb_cmd = shlex.split(buildblastdb)
     Popen(buildblastdb_cmd,stdout=DEVNULL,env={'PATH':binaries_path}).wait()
 
     #run blast
     print('Running blastn...')
-    runblast = f"blastn -num_threads {cpus} -query {database_path} -db {temp_name} -out {temp_name}.blast.csv -outfmt \"10 qseqid sseqid evalue pident\" -max_target_seqs 10000000 -evalue 100"
+    blastn_path = os.path.join(binaries_path,'blastn')
+    runblast = f"{blastn_path} -num_threads {cpus} -query {database_path} -db {temp_name} -out {temp_name}.blast.csv -outfmt \"10 qseqid sseqid evalue pident\" -max_target_seqs 10000000 -evalue 100"
     runblast_cmd = shlex.split(runblast)
     Popen(runblast_cmd,stdout=DEVNULL,env={'PATH':binaries_path}).wait()
 
@@ -78,17 +82,18 @@ def local_mapping(cpus,fwd,rev,kmer='7',database='ncbi_ar'):
 
     #generate kmers
     print('Generating Kmers...')
-    count_kmers = f"jellyfish count -m {kmer} -s 100M -t {cpus} -C {temp_name}.matches.fasta -o {temp_name}"
+    jellyfish_path = os.path.join(binaries_path,'jellyfish')
+    count_kmers = f"{jellyfish_path} count -m {kmer} -s 100M -t {cpus} -C {temp_name}.matches.fasta -o {temp_name}"
     count_kmers_cmd = shlex.split(count_kmers)
     Popen(count_kmers_cmd,stdout=DEVNULL,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
-    dump_kmers = f"jellyfish dump {temp_name}_0"
+    dump_kmers = f"{jellyfish_path} dump {temp_name}_0"
     dump_kmers_cmd = shlex.split(dump_kmers)
     with open(f"{seqid}.kmers.fa",'w') as outkmers:
         Popen(dump_kmers_cmd,stdout=outkmers,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
 
     #remove temp files
-    file_list = glob(f'{temp_name}*')
-    for file in file_list:
-        os.remove(file)
+    #file_list = glob(f'{temp_name}*')
+    #for file in file_list:
+    #   os.remove(file)
 
     return f"{seqid}.kmers.fa"

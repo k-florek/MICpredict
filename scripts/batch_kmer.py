@@ -4,10 +4,11 @@
 #email kelsey.florek@slh.wisc.edu
 #description: generate kmers from a list of paths for each read in order
 
-import os,sys,argparse
+import os,sys,argparse,shutil
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import app.kmer as kmer
 import multiprocessing as mp
+import glob
 
 #setup argparser to display help if no arguments
 class MyParser(argparse.ArgumentParser):
@@ -35,38 +36,68 @@ def cpu_count(num):
 #determine command line arguments and get path
 parser = MyParser(description='Generate kmers from all sequencing reads from a file of paths.')
 
-parser.add_argument('file_of_files',help='file with paths to sequencing reads')
-parser.add_argument('--db',type=str,help='AR database to use',default='ncbi_ar')
+parser.add_argument('path_of_fastq',help='path to fastq_files')
+parser.add_argument('--db',type=str,help='AR database to use, default ncbi_ar',default='ncbi_ar')
 parser.add_argument('-t',type=int,help='number of threads',default=4)
-parser.add_argument('-k',type=str,help='k-mer size, default: 7')
+parser.add_argument('-k',type=str,help='k-mer size, default: 7',default='7')
 parser.add_argument('-o',type=str,help='output directory')
 
 args = parser.parse_args()
-reads = []
-with open(args.file_of_files,'r') as filepaths:
-    line = filepaths.readline()
-    while line:
-        read1 = line
-        read2 = filepaths.readline()
-        reads.append([read1,read2])
-        line = filepaths.readline()
 
-
+#get arguments
 jobs,cpusJob = cpu_count(args.t)
 pool = mp.Pool(processes=jobs)
 
-results = pool.starmap_async(kmer.local_mapping,[[cpusJob,read_pair[0],read_pair[1],args.k,args.db] for read_pair in reads])
+#check out dir
+try:
+    os.mkdir(args.o)
+except FileExistsError:
+    print("Output Directory already exists.")
+    sys.exit(1)
+
+#get fwd and rev reads
+fwd_reads = glob.glob(os.path.join(args.path_of_fastq,'*_R1*.fastq.gz'))
+fwd_reads.sort()
+rev_reads = glob.glob(os.path.join(args.path_of_fastq,'*_R2*.fastq.gz'))
+rev_reads.sort()
+
+#Define error catching for fastq input
+class InputError(Exception):
+    def __init__(self,error_msg):
+        self.error_msg = error_msg
+    def __str__(self):
+        return self.error_msg
+
+#Check if we have even number of paired reads
+if len(fwd_reads) != len(rev_reads):
+    raise InputError("There is an uneven number of fastq files on input.")
+
+#combine fastq_files
+counter = 0
+read_pairs = []
+while counter < len(fwd_reads):
+    #check we have a pair
+    if fwd_reads[counter].split('_R1')[0] == rev_reads[counter].split('_R2')[0]:
+        read_pairs.append([os.path.abspath(fwd_reads[counter]),os.path.abspath(rev_reads[counter])])
+    else:
+        raise InputError("Mismatch Read Pair: "+fwd_reads[counter]+" and "+rev_reads[counter])
+    counter += 1
+
+#create dir for holding temp files
+try:
+    os.mkdir("MICpredict_kmer_temp_files")
+except FileExistsError:
+    temp_dir = os.path.abspath("MICpredict_kmer_temp_files")
+    shutil.rmtree(temp_dir)
+    os.mkdir("MICpredict_kmer_temp_files")
+temp_dir = os.path.abspath("MICpredict_kmer_temp_files")
+
+results = pool.starmap_async(kmer.local_mapping,[[cpusJob,read_pair[0],read_pair[1],args.k,args.db,temp_dir] for read_pair in read_pairs])
 files = results.get()
 for file in files:
     file_abs = os.path.abspath(file)
     outdir = os.path.abspath(args.o)
     os.rename(file_abs,os.path.join(outdir,file))
     print(f"finished {file}")
-'''
-for read_pair in reads:
-    file = kmer.local_mapping(args.t,read_pair[0],read_pair[1],args.k,args.db)
-    file_abs = os.path.abspath(file)
-    outdir = os.path.abspath(args.o)
-    os.rename(file_abs,os.path.join(outdir,file))
-    print(f"finished {file}")
-'''
+
+shutil.rmtree(temp_dir)
