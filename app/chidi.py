@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os,sys
-from sklearn.ensemble import RandomForestClassifier as RFC
+import tensorflow as tf
 import csv
 import numpy as np
 import pickle

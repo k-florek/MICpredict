@@ -2,7 +2,7 @@
 
 #Author Kelsey Florek
 #email kelsey.florek@slh.wisc.edu
-#generate kmers from a list of paths for each read in order
+#description: generate kmers from a list of paths for each read in order
 
 import os,sys,argparse
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -38,7 +38,7 @@ parser = MyParser(description='Generate kmers from all sequencing reads from a f
 parser.add_argument('file_of_files',help='file with paths to sequencing reads')
 parser.add_argument('--db',type=str,help='AR database to use',default='ncbi_ar')
 parser.add_argument('-t',type=int,help='number of threads',default=4)
-parser.add_argument('-k',type=str,help='k-mer size, default: 21')
+parser.add_argument('-k',type=str,help='k-mer size, default: 7')
 parser.add_argument('-o',type=str,help='output directory')
 
 args = parser.parse_args()

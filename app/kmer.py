@@ -1,6 +1,6 @@
 #Author Kelsey Florek
 #email kelsey.florek@slh.wisc.edu
-#description generate the kmers used in the model
+#description: generate the kmers used in the model
 
 import os,sys,shlex
 from subprocess import Popen, PIPE, DEVNULL
@@ -14,7 +14,7 @@ micpredict_path= os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpat
 binaries_path = os.path.join(micpredict_path,'binaries/linux/')
 
 #function to map reads to ncbi resistance database
-def local_mapping(cpus,fwd,rev,kmer='21',database='ncbi_ar'):
+def local_mapping(cpus,fwd,rev,kmer='7',database='ncbi_ar'):
     #establish absoulte paths to everything we need
     read1 = os.path.abspath(fwd)
     read2 = os.path.abspath(rev)
