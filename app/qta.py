@@ -1,3 +1,4 @@
+#function to convert a fastq file to a fasta
 def qta(instream,read=''):
     data_stream = instream.readlines()
     c=0
