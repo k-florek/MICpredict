@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 
 import sys
+import itertools
 import pickle
+import argparse
 
-file_list = sys.argv[1]
+#setup argparser to display help if no arguments
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
 
+parser = MyParser(description='Get all possible kmers.')
+
+parser.add_argument('k',help='length of k-mer')
+args = parser.parse_args()
+
+k = int(args.k)
+
+DNAchars = 'ATGC'
 vocab = {}
+for kmer in itertools.product(DNAchars,repeat=k):
+    vocab[kmer] = 0
 
-c = 0
-pathlist = []
-with open(file_list,'r') as infile:
-    for line in infile.readlines():
-        pathlist.append(line.strip())
-
-for file in pathlist:
-    with open(file,'r') as infasta:
-        for line in infasta.readlines():
-            if line[0] != '>':
-                seq = line.strip()
-                if seq not in vocab:
-                    vocab[seq] = c
-                    c += 1
-
-with open("kmer_dictionary.pkl",'wb') as outfile:
+print("Generated dictionary of length:",len(vocab))
+with open(f'{k}-mer_dictionary_len-{len(vocab)}.pkl','wb') as outfile:
     pickle.dump(vocab,outfile)
