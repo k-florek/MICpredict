@@ -92,8 +92,8 @@ def local_mapping(cpus,read1,read2,kmer='7',database='ncbi_ar',working_dir='.'):
         Popen(dump_kmers_cmd,stdout=outkmers,env={'PATH':binaries_path,'LD_LIBRARY_PATH':binaries_path}).wait()
 
     #remove temp files
-    #file_list = glob(f'{temp_name}*')
-    #for file in file_list:
-    #   os.remove(file)
+    file_list = glob(f'{temp_name}*')
+    for file in file_list:
+       os.remove(file)
 
     return f"{seqid}.kmers.fa"
