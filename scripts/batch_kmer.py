@@ -95,7 +95,7 @@ temp_dir = os.path.abspath("MICpredict_kmer_temp_files")
 results = pool.starmap_async(kmer.local_mapping,[[cpusJob,read_pair[0],read_pair[1],args.k,args.db,temp_dir] for read_pair in read_pairs])
 files = results.get()
 for file in files:
-    file_abs = os.path.abspath(file)
+    file_abs = os.path.join(temp_dir,file)
     outdir = os.path.abspath(args.o)
     os.rename(file_abs,os.path.join(outdir,file))
     print(f"finished {file}")
