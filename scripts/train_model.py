@@ -2,26 +2,31 @@
 
 import csv
 import pickle
-import os,sys
+import os,sys, glob
+import argparse
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from app.chidi import trainModel
+from app.forcett import trainModel
 
 #establish global paths
 micpredict_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
-vocab_path = os.path.join(micpredict_path,'db/hf_kmer_dictionary.pkl')
 
-file_paths = sys.argv[1]
-mics = sys.argv[2]
-flist = []
-with open(file_paths,'r') as infile:
-    for line in infile.readlines():
-        flist.append(line.strip())
-mic_data = []
-with open(mics,'r') as infile:
-    csvr = csv.reader(infile,delimiter=',')
-    for line in csvr:
-        mic_data.append(line)
+#setup argparser to display help if no arguments
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
 
-with open(vocab_path,'rb') as infile:
-    v = pickle.load(infile)
-trainModel(flist,v,mic_data)
+parser = MyParser(description='Train the RNN Model.')
+
+parser.add_argument('kmer_dir',help='directory containing kmer fasta files')
+parser.add_argument('mic_csv',help='Mic Values in CSV format')
+parser.add_argument('kmer_dictionary',help='Kmer dictionary generated from generate_kmer_dictionary.py')
+args = parser.parse_args()
+
+kmer_fasta_list = glob.glob(os.path.join(args.kmer_dir,'*.kmers.fa'))
+
+with open(args.kmer_dictionary,'rb') as infile:
+    vocab = pickle.load(infile)
+
+trainModel(kmer_fasta_list,vocab,args.mic_csv)
