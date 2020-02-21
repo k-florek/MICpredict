@@ -21,7 +21,8 @@ k = int(args.k)
 
 DNAchars = 'ATGC'
 vocab = {}
-for kmer in itertools.product(DNAchars,repeat=k):
+for kmer_l in itertools.product(DNAchars,repeat=k):
+    kmer = ''.join(kmer_l)
     vocab[kmer] = 0
 
 print("Generated dictionary of length:",len(vocab))
