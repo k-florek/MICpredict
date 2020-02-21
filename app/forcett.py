@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import os,sys
 import tensorflow as tf
+from tensorflow import keras
 import csv
 import numpy as np
 import pickle
 
 def trainModel(kmer_paths,vocab,mic_values):
-    train_array = np.zeros((len(kmer_paths),8000000),dtype=int)
+    train_array = np.zeros((len(kmer_paths),len(vocab)),dtype=int)
     train_ids = []
 
     #read convert and store kmers
@@ -37,10 +38,27 @@ def trainModel(kmer_paths,vocab,mic_values):
                 break
         label_row += 1
 
+    #define the RNN model for 7-mer
+    model = tf.keras.Sequential([
+    # Adds a densely-connected layer with 64 units to the model:
+    layers.Dense(8192, activation='relu', input_shape=(32,)),
+    #add a drop layer
+    layers.Dropout(0.5),
+    # Add another:
+    layers.Dense(4096, activation='relu'),
+    #add a drop layer
+    layers.Dropout(0.5),
+    # Add an output layer with 10 output units:
+    layers.Dense(28)])
+
+    #create the model
+    model.compile(optimizer=tf.keras.optimizers.Adam(),
+                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+                  metrics=['accuracy'])
+
     #train the model
     print('Training the random forest model.')
-    clf = RFC(n_estimators=10,random_state=22,n_jobs=-1)
-    clf.fit(train_array,train_labels)
+    model.fit(train_array, train_labels, epochs=10, batch_size=32)
 
     #save the model
     with open("rf_model.sav",'wb') as model_file:
