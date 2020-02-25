@@ -21,9 +21,11 @@ k = int(args.k)
 
 DNAchars = 'ATGC'
 vocab = {}
+counter = 0
 for kmer_l in itertools.product(DNAchars,repeat=k):
     kmer = ''.join(kmer_l)
-    vocab[kmer] = 0
+    vocab[kmer] = counter
+    counter += 1
 
 print("Generated dictionary of length:",len(vocab))
 with open(f'{k}-mer_dictionary_len-{len(vocab)}.pkl','wb') as outfile:
